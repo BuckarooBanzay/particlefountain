@@ -89,7 +89,7 @@ minetest.register_node("particlefountain:particlefountain", {
 
 		local texture = "default_mese_crystal.png"
 
-		if def.inventory_image then
+		if def.inventory_image and def.inventory_image ~= "" then
 			texture = def.inventory_image
 
 		elseif def.tiles then
