@@ -5,8 +5,10 @@ local update_formspec = function(meta)
 	meta:set_string("infotext", "Add item block: pos=" .. pos)
 
 	meta:set_string("formspec", "size[8,7;]" ..
-		"field[0.2,0.5;4,1;amount;Amount;${amount}]" ..
-		"field[4.2,0.5;4,1;amount;Amount;${amount}]" ..
+		"field[0.2,0.5;2,1;amount;Amount;${amount}]" ..
+		"field[2.2,0.5;2,1;glow;Glow;${glow}]" ..
+		"field[4.2,0.5;2,1;height;Height;${height}]" ..
+		"field[6.2,0.5;2,1;spread;Spread;${spread}]" ..
 
 		"button_exit[6.1,1.5;2,1;save;Save]" ..
 		"list[context;main;0.1,1.5;1,1;]" ..
@@ -27,6 +29,8 @@ minetest.register_node("particlefountain:particlefountain", {
     local meta = minetest.get_meta(pos)
 		meta:set_int("amount", 4)
 		meta:set_int("glow", 9)
+		meta:set_int("height", 2)
+		meta:set_int("spread", 1)
 
 		local inv = meta:get_inventory()
 		inv:set_size("main", 1)
@@ -46,6 +50,8 @@ minetest.register_node("particlefountain:particlefountain", {
 		if fields.save then
 			meta:set_int("amount", tonumber(fields.amount) or 4)
 			meta:set_int("glow", tonumber(fields.glow) or 9)
+			meta:set_int("height", tonumber(fields.height) or 2)
+			meta:set_int("spread", tonumber(fields.spread) or 1)
 		end
 
 		update_formspec(meta)
@@ -90,23 +96,25 @@ minetest.register_node("particlefountain:particlefountain", {
 			if type(def.tiles) == "string" then
 				texture = def.tiles
 
-			elseif type(def.tiles) == "table" then
+			elseif type(def.tiles) == "table" and #def.tiles >= 1 and def.tiles[1] then
 				texture = def.tiles[1]
 
 			end
 		end
 
+		local spread = meta:get_int("spread")
+
 		minetest.add_particlespawner({
 			amount = meta:get_int("amount"),
 			time = 2,
-			minpos = vector.add(pos, {x=-0.2, y=0, z=-0.2}),
-			maxpos = vector.add(pos, {x=0.2, y=0, z=0.2}),
+			minpos = vector.add(pos, {x=-spread, y=0, z=-spread}),
+			maxpos = vector.add(pos, {x=spread, y=0, z=spread}),
 			minvel = {x=0, y=1, z=0},
 			maxvel = {x=0, y=2, z=0},
 			minacc = {x=0, y=0, z=0},
 			maxacc = {x=0, y=0, z=0},
 			minexptime = 1,
-			maxexptime = 2,
+			maxexptime = meta:get_int("height"),
 			minsize = 1,
 			maxsize = 1.7,
 			collisiondetection = false,
