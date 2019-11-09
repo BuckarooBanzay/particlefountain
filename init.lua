@@ -118,6 +118,10 @@ minetest.register_node("particlefountain:particlefountain", {
 			meta:set_int("time", tonumber(fields.time) or 2)
 			meta:set_int("spread", tonumber(fields.spread) or 1)
 			meta:set_int("speedfactor", tonumber(fields.speedfactor) or 2)
+
+			emit_particles(pos)
+			local timer = minetest.get_node_timer(pos)
+			timer:start(DEFAULT_INTERVAL)
 		end
 
 		update_formspec(meta)
