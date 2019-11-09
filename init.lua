@@ -21,9 +21,16 @@ end
 minetest.register_node("particlefountain:particlefountain", {
 	description = "Particlefountain",
 	tiles = {
-		"default_gold_block.png^default_mese_crystal.png"
+		"default_gold_block.png",
+		"default_gold_block.png",
+		"default_gold_block.png",
+		"default_gold_block.png",
+		"default_gold_block.png^default_mese_crystal.png",
+		"default_gold_block.png"
 	},
+	"default_gold_block.png",
 	groups = {cracky=3,oddly_breakable_by_hand=3},
+	paramtype2 = "facedir",
 
 	on_construct = function(pos)
     local meta = minetest.get_meta(pos)
@@ -104,13 +111,16 @@ minetest.register_node("particlefountain:particlefountain", {
 
 		local spread = meta:get_int("spread")
 
+		local node = minetest.get_node(pos)
+		local dir = minetest.facedir_to_dir(node.param2)
+
 		minetest.add_particlespawner({
 			amount = meta:get_int("amount"),
 			time = 2,
 			minpos = vector.add(pos, {x=-spread, y=0, z=-spread}),
 			maxpos = vector.add(pos, {x=spread, y=0, z=spread}),
-			minvel = {x=0, y=1, z=0},
-			maxvel = {x=0, y=2, z=0},
+			minvel = dir,
+			maxvel = vector.multiply(dir, 2),
 			minacc = {x=0, y=0, z=0},
 			maxacc = {x=0, y=0, z=0},
 			minexptime = 1,
