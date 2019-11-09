@@ -1,4 +1,6 @@
 
+local DEFAULT_INTERVAL = 2
+
 local update_formspec = function(meta)
 	local pos = meta:get_string("pos")
 
@@ -16,6 +18,62 @@ local update_formspec = function(meta)
 		"list[current_player;main;0,3;8,4;]" ..
 		"listring[]" ..
 		"")
+end
+
+local function emit_particles(pos)
+	local meta = minetest.get_meta(pos)
+	local inv = meta:get_inventory()
+	local stack = inv:get_stack("main", 1)
+	local node_name = stack:get_name()
+	if node_name == "ignore" or node_name == "" then
+		return true
+	end
+
+	local def = minetest.registered_items[node_name]
+	if not def then
+		return true
+	end
+
+	local texture = "default_mese_crystal.png"
+
+	if def.inventory_image and def.inventory_image ~= "" then
+		texture = def.inventory_image
+
+	elseif def.tiles then
+		if type(def.tiles) == "string" then
+			texture = def.tiles
+
+		elseif type(def.tiles) == "table" and #def.tiles >= 1 and def.tiles[1] then
+			texture = def.tiles[1]
+
+		end
+	end
+
+	local spread = meta:get_int("spread")
+
+	local node = minetest.get_node(pos)
+	local dir = minetest.facedir_to_dir(node.param2)
+
+	minetest.add_particlespawner({
+		amount = meta:get_int("amount"),
+		time = DEFAULT_INTERVAL,
+		minpos = vector.add(pos, {x=-spread, y=0, z=-spread}),
+		maxpos = vector.add(pos, {x=spread, y=0, z=spread}),
+		minvel = dir,
+		maxvel = vector.multiply(dir, 2),
+		minacc = {x=0, y=0, z=0},
+		maxacc = {x=0, y=0, z=0},
+		minexptime = 1,
+		maxexptime = meta:get_int("height"),
+		minsize = 1,
+		maxsize = 1.7,
+		collisiondetection = false,
+		collision_removal = false,
+		object_collision = false,
+		vertical = false,
+		texture = texture,
+		glow = meta:get_int("glow")
+	})
 end
 
 minetest.register_node("particlefountain:particlefountain", {
@@ -43,7 +101,7 @@ minetest.register_node("particlefountain:particlefountain", {
 		inv:set_size("main", 1)
 
     update_formspec(meta, pos)
-		minetest.get_node_timer(pos):start(2)
+		minetest.get_node_timer(pos):start(DEFAULT_INTERVAL)
   end,
 
   on_receive_fields = function(pos, _, fields, sender)
@@ -80,61 +138,22 @@ minetest.register_node("particlefountain:particlefountain", {
 		return stack:get_count()
 	end,
 
-	on_timer = function(pos)
-		local meta = minetest.get_meta(pos)
-		local inv = meta:get_inventory()
-		local stack = inv:get_stack("main", 1)
-		local node_name = stack:get_name()
-		if node_name == "ignore" or node_name == "" then
-			return true
-		end
-
-		local def = minetest.registered_items[node_name]
-		if not def then
-			return true
-		end
-
-		local texture = "default_mese_crystal.png"
-
-		if def.inventory_image and def.inventory_image ~= "" then
-			texture = def.inventory_image
-
-		elseif def.tiles then
-			if type(def.tiles) == "string" then
-				texture = def.tiles
-
-			elseif type(def.tiles) == "table" and #def.tiles >= 1 and def.tiles[1] then
-				texture = def.tiles[1]
-
+	mesecons = {
+		effector = {
+			action_on = function (pos)
+				emit_particles(pos)
+				local timer = minetest.get_node_timer(pos)
+				timer:start(DEFAULT_INTERVAL)
+			end,
+			action_off = function (pos)
+				local timer = minetest.get_node_timer(pos)
+				timer:stop()
 			end
-		end
+	  }
+	},
 
-		local spread = meta:get_int("spread")
-
-		local node = minetest.get_node(pos)
-		local dir = minetest.facedir_to_dir(node.param2)
-
-		minetest.add_particlespawner({
-			amount = meta:get_int("amount"),
-			time = 2,
-			minpos = vector.add(pos, {x=-spread, y=0, z=-spread}),
-			maxpos = vector.add(pos, {x=spread, y=0, z=spread}),
-			minvel = dir,
-			maxvel = vector.multiply(dir, 2),
-			minacc = {x=0, y=0, z=0},
-			maxacc = {x=0, y=0, z=0},
-			minexptime = 1,
-			maxexptime = meta:get_int("height"),
-			minsize = 1,
-			maxsize = 1.7,
-			collisiondetection = false,
-			collision_removal = false,
-			object_collision = false,
-			vertical = false,
-			texture = texture,
-      glow = meta:get_int("glow")
-		})
-
+	on_timer = function(pos)
+		emit_particles(pos)
 		return true
 	end
 })
