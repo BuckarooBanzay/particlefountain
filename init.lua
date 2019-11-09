@@ -54,11 +54,14 @@ local function emit_particles(pos)
 	local node = minetest.get_node(pos)
 	local dir = minetest.facedir_to_dir(node.param2)
 
+	local minpos = vector.add(pos, spread)
+	local maxpos = vector.add(pos, -spread)
+
 	minetest.add_particlespawner({
 		amount = meta:get_int("amount"),
 		time = DEFAULT_INTERVAL,
-		minpos = vector.add(pos, {x=-spread, y=0, z=-spread}),
-		maxpos = vector.add(pos, {x=spread, y=0, z=spread}),
+		minpos = minpos,
+		maxpos = maxpos,
 		minvel = dir,
 		maxvel = vector.multiply(dir, 2),
 		minacc = {x=0, y=0, z=0},
