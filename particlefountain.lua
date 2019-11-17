@@ -110,7 +110,7 @@ minetest.register_node("particlefountain:particlefountain", {
 
 	on_construct = function(pos)
     local meta = minetest.get_meta(pos)
-		meta:set_int("offset", 4)
+		meta:set_int("offset", 0)
 		meta:set_int("amount", 4)
 		meta:set_int("glow", 9)
 		meta:set_int("time", 2)
