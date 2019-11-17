@@ -12,6 +12,9 @@ decorative and configurable particle spawner
 
 # License
 
+* textures/particlefountain_star.png
+* CC BY-SA 3.0 https://github.com/minetest/minetest_game/tree/master/mods/fireflies
+
 ## Code
 
 * MIT

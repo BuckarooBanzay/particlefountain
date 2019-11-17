@@ -4,17 +4,27 @@ local DEFAULT_INTERVAL = 2
 local update_formspec = function(meta)
 	meta:set_string("infotext", "Particlefountain")
 
+	local collision = meta:get_int("collision")
+	local coll_text = "Ignore collisions"
+	if collision == 1 then
+		coll_text = "Remove on collision"
+	end
+
 	meta:set_string("formspec", "size[8,7;]" ..
 		"field[0.2,0.5;2,1;amount;Amount;${amount}]" ..
 		"field[2.2,0.5;2,1;glow;Glow;${glow}]" ..
-		"field[4.2,0.5;2,1;time;Time;${time}]" ..
-		"field[6.2,0.5;2,1;spread;Spread;${spread}]" ..
+		"field[4.2,0.5;2,1;spread;Spread;${spread}]" ..
+		"field[6.2,0.5;2,1;targetspread;Target-Spread;${targetspread}]" ..
 
-		"list[context;main;0.1,1.5;1,1;]" ..
+		"field[0.2,1.5;2,1;offset;Offset;${offset}]" ..
+		"field[2.2,1.5;2,1;time;Time;${time}]" ..
 		"field[4.2,1.5;2,1;speedfactor;Speed-factor;${speedfactor}]" ..
-		"button_exit[6.1,1.5;2,1;save;Save]" ..
+		"button_exit[6.1,1.2;2,1;togglecd;"..coll_text.."]" ..
 
-		"list[current_player;main;0,3;8,4;]" ..
+		"list[context;main;0.1,2.2;1,1;]" ..
+		"button_exit[6.1,2.2;2,1;save;Save]" ..
+
+		"list[current_player;main;0,4;8,4;]" ..
 		"listring[]" ..
 		"")
 end
@@ -48,27 +58,35 @@ local function emit_particles(pos)
 		end
 	end
 
-	local spread = meta:get_int("spread")
-
 	local node = minetest.get_node(pos)
 	local dir = minetest.facedir_to_dir(node.param2)
+
+	local source_pos = vector.add(pos, vector.multiply(dir, meta:get_int("offset")))
+	local spread = meta:get_int("spread")
+
+	local maxvel = vector.multiply(dir, meta:get_int("speedfactor"))
+	local minvel = vector.subtract(dir, meta:get_int("targetspread"))
+
+	maxvel = vector.add(maxvel, meta:get_int("targetspread"))
+
+	local collision_removal = meta:get_int("collision") == 1
 
 	minetest.add_particlespawner({
 		amount = meta:get_int("amount"),
 		time = DEFAULT_INTERVAL,
-		minpos = vector.add(pos, spread),
-		maxpos = vector.add(pos, -spread),
-		minvel = dir,
-		maxvel = vector.multiply(dir, meta:get_int("speedfactor")),
+		minpos = vector.add(source_pos, spread),
+		maxpos = vector.add(source_pos, -spread),
+		minvel = minvel,
+		maxvel = maxvel,
 		minacc = {x=0, y=0, z=0},
 		maxacc = {x=0, y=0, z=0},
 		minexptime = 1,
 		maxexptime = meta:get_int("time"),
 		minsize = 1,
 		maxsize = 1.7,
-		collisiondetection = false,
-		collision_removal = false,
-		object_collision = false,
+		collisiondetection = collision_removal,
+		collision_removal = collision_removal,
+		object_collision = collision_removal,
 		vertical = false,
 		texture = texture,
 		glow = meta:get_int("glow")
@@ -91,11 +109,14 @@ minetest.register_node("particlefountain:particlefountain", {
 
 	on_construct = function(pos)
     local meta = minetest.get_meta(pos)
+		meta:set_int("offset", 4)
 		meta:set_int("amount", 4)
 		meta:set_int("glow", 9)
 		meta:set_int("time", 2)
 		meta:set_int("spread", 1)
+		meta:set_int("targetspread", 1)
 		meta:set_int("speedfactor", 2)
+		meta:set_int("collision", 0)
 
 		local inv = meta:get_inventory()
 		inv:set_size("main", 1)
@@ -112,17 +133,28 @@ minetest.register_node("particlefountain:particlefountain", {
 
 		local meta = minetest.get_meta(pos);
 
+		if fields.togglecd then
+			if meta:get_int("collision") == 0 then
+				meta:set_int("collision", 1)
+			else
+				meta:set_int("collision", 0)
+			end
+		end
+
 		if fields.save then
 			meta:set_int("amount", tonumber(fields.amount) or 4)
 			meta:set_int("glow", tonumber(fields.glow) or 9)
+			meta:set_int("offset", tonumber(fields.offset) or 0)
 			meta:set_int("time", tonumber(fields.time) or 2)
 			meta:set_int("spread", tonumber(fields.spread) or 1)
+			meta:set_int("targetspread", tonumber(fields.targetspread) or 1)
 			meta:set_int("speedfactor", tonumber(fields.speedfactor) or 2)
-
-			emit_particles(pos)
-			local timer = minetest.get_node_timer(pos)
-			timer:start(DEFAULT_INTERVAL)
 		end
+
+		emit_particles(pos)
+		local timer = minetest.get_node_timer(pos)
+		timer:start(DEFAULT_INTERVAL)
+
 
 		update_formspec(meta)
   end,
