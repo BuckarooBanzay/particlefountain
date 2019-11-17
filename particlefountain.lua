@@ -10,7 +10,7 @@ local update_formspec = function(meta)
 		coll_text = "Remove on collision"
 	end
 
-	meta:set_string("formspec", "size[8,7;]" ..
+	meta:set_string("formspec", "size[8,8;]" ..
 		"field[0.2,0.5;2,1;amount;Amount;${amount}]" ..
 		"field[2.2,0.5;2,1;glow;Glow;${glow}]" ..
 		"field[4.2,0.5;2,1;spread;Spread;${spread}]" ..
@@ -22,6 +22,7 @@ local update_formspec = function(meta)
 		"button_exit[6.1,1.2;2,1;togglecd;"..coll_text.."]" ..
 
 		"list[context;main;0.1,2.2;1,1;]" ..
+		"field[2.2,2.5;2,1;maxsize;Max size;${maxsize}]" ..
 		"button_exit[6.1,2.2;2,1;save;Save]" ..
 
 		"list[current_player;main;0,4;8,4;]" ..
@@ -83,7 +84,7 @@ local function emit_particles(pos)
 		minexptime = 1,
 		maxexptime = meta:get_int("time"),
 		minsize = 1,
-		maxsize = 1.7,
+		maxsize = meta:get_int("maxsize"),
 		collisiondetection = collision_removal,
 		collision_removal = collision_removal,
 		object_collision = collision_removal,
@@ -117,6 +118,7 @@ minetest.register_node("particlefountain:particlefountain", {
 		meta:set_int("targetspread", 1)
 		meta:set_int("speedfactor", 2)
 		meta:set_int("collision", 0)
+		meta:set_int("maxsize", 2)
 
 		local inv = meta:get_inventory()
 		inv:set_size("main", 1)
@@ -147,6 +149,7 @@ minetest.register_node("particlefountain:particlefountain", {
 			meta:set_int("offset", tonumber(fields.offset) or 0)
 			meta:set_int("time", tonumber(fields.time) or 2)
 			meta:set_int("spread", tonumber(fields.spread) or 1)
+			meta:set_int("maxsize", tonumber(fields.maxsize) or 1)
 			meta:set_int("targetspread", tonumber(fields.targetspread) or 1)
 			meta:set_int("speedfactor", tonumber(fields.speedfactor) or 2)
 		end
