@@ -106,6 +106,7 @@ minetest.register_node("particlefountain:particlefountain", {
 	},
 
 	groups = {cracky=3,oddly_breakable_by_hand=3},
+	is_ground_content = false,
 	paramtype2 = "facedir",
 
 	on_construct = function(pos)
